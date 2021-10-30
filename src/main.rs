@@ -1,6 +1,6 @@
 #![feature(box_into_inner)]
 
-use std::{fmt::Debug, ops::Deref};
+use std::{fmt::Debug, ops::{Deref, DerefMut}};
 
 pub struct Head<T>(Option<Box<Node<T>>>);
 
@@ -29,8 +29,31 @@ impl<T> Head<T> {
         Some(value)
     }
 
+    pub fn push_back(&mut self, value: T) {
+        match &mut self.0 {
+            Some(node) => node.next.push_back(value),
+            None => self.0 = Some(Box::new(Node::new(value)))
+        }
+    }
+
+    pub fn pop_back(&mut self) -> Option<T> {
+        match &mut self.0 {
+            Some(node) => {
+                match node.next.pop_back() {
+                    None => self.pop(),
+                    Some(t) => Some(t),
+                }
+            },
+            None => None,
+        }
+    }
+
     pub fn iter(&self) -> HeadIter<'_, T> {
-        HeadIter(self)
+        HeadIter(self.0.as_ref().map(Deref::deref))
+    }
+
+    pub fn iter_mut(&mut self) -> HeadIterMut<'_, T> {
+        HeadIterMut(self.0.as_mut().map(DerefMut::deref_mut))
     }
 }
 
@@ -48,19 +71,25 @@ impl<T> Iterator for Head<T> {
     }
 }
 
-pub struct HeadIter<'a, T>(&'a Head<T>);
+pub struct HeadIter<'a, T>(Option<&'a Node<T>>);
 impl<'a, T> Iterator for HeadIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.0.0 {
-            None => None,
-            Some(node) => {
-                let Node { next, value } = node.deref();
-                *self = Self(next);
-                Some(value)
-            },
-        }
+        let Node { next, value } = self.0.take()?;
+        *self = Self(next.0.as_ref().map(Deref::deref));
+        Some(value)
+    }
+}
+
+pub struct HeadIterMut<'a, T>(Option<&'a mut Node<T>>);
+impl<'a, T> Iterator for HeadIterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let Node { next, value } = self.0.take()?;
+        *self = Self(next.0.as_mut().map(DerefMut::deref_mut));
+        Some(value)
     }
 }
 
