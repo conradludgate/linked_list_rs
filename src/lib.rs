@@ -1,5 +1,3 @@
-#![feature(box_into_inner)]
-
 mod node;
 pub mod iter;
 
@@ -33,7 +31,7 @@ impl<T> LinkedList<T> {
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        let Node { next, value } = Box::into_inner(self.0.take()?);
+        let Node { next, value } = *self.0.take()?;
         *self = next;
         Some(value)
     }
@@ -41,6 +39,33 @@ impl<T> LinkedList<T> {
     pub fn first(&self) -> Option<&T> {
         match &self.0 {
             Some(node) => Some(&node.value),
+            None => None,
+        }
+    }
+
+    pub fn first_mut(&mut self) -> Option<&mut T> {
+        match &mut self.0 {
+            Some(node) => Some(&mut node.value),
+            None => None,
+        }
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        match &self.0 {
+            Some(node) => match node.next.last() {
+                None => Some(&node.value),
+                Some(t) => Some(t),
+            },
+            None => None,
+        }
+    }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        match &mut self.0 {
+            Some(node) => match node.next.last_mut() {
+                None => Some(&mut node.value),
+                Some(t) => Some(t),
+            },
             None => None,
         }
     }
