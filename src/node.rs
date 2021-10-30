@@ -1,6 +1,6 @@
 use crate::Head;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node<T> {
     pub(crate) next: Head<T>,
     pub(crate) value: T,
