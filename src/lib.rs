@@ -1,12 +1,23 @@
-mod node;
 pub mod iter;
 
 use std::{fmt::Debug, ops::DerefMut};
 
-use crate::{
-    iter::{Iter, IterMut},
-    node::Node,
-};
+use crate::iter::{Iter, IterMut};
+
+#[derive(Debug, Clone, PartialEq)]
+struct Node<T> {
+    next: LinkedList<T>,
+    value: T,
+}
+
+impl<T> Node<T> {
+    fn new(value: T) -> Box<Self> {
+        Box::new(Self {
+            next: LinkedList::new(),
+            value,
+        })
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub struct LinkedList<T>(pub(crate) Option<Box<Node<T>>>);
