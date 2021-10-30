@@ -1,8 +1,16 @@
 use std::{iter::FusedIterator, ops::DerefMut};
 
-use crate::{Head, Node};
+use crate::{LinkedList, Node};
 
-pub struct IntoIter<T>(pub(crate) Head<T>);
+impl<T> IntoIterator for LinkedList<T> {
+    type IntoIter = IntoIter<T>;
+    type Item = T;
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self)
+    }
+}
+
+pub struct IntoIter<T>(pub(crate) LinkedList<T>);
 
 impl<T> FusedIterator for IntoIter<T> {}
 
@@ -20,7 +28,15 @@ impl<T> DoubleEndedIterator for IntoIter<T> {
     }
 }
 
-pub struct Iter<'a, T>(pub(crate) &'a Head<T>);
+impl<'a, T> IntoIterator for &'a LinkedList<T> {
+    type IntoIter = Iter<'a, T>;
+    type Item = &'a T;
+    fn into_iter(self) -> Self::IntoIter {
+        Iter(self)
+    }
+}
+
+pub struct Iter<'a, T>(pub(crate) &'a LinkedList<T>);
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;

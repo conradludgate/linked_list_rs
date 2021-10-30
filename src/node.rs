@@ -1,15 +1,15 @@
-use crate::Head;
+use crate::LinkedList;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node<T> {
-    pub(crate) next: Head<T>,
+    pub(crate) next: LinkedList<T>,
     pub(crate) value: T,
 }
 
 impl<T> Node<T> {
     pub fn new(value: T) -> Self {
         Self {
-            next: Head::new(),
+            next: LinkedList::new(),
             value,
         }
     }
