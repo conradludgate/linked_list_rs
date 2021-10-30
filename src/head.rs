@@ -1,8 +1,8 @@
-use std::{fmt::Debug, iter::FusedIterator, ops::{Deref, DerefMut}};
+use std::{fmt::Debug, ops::DerefMut};
 
-use crate::{HeadMut, HeadRef, node::Node};
+use crate::{iter::Iter, node::Node, HeadMut};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Head<T>(pub(crate) Option<Box<Node<T>>>);
 
 impl<T> Head<T> {
@@ -30,6 +30,13 @@ impl<T> Head<T> {
         Some(value)
     }
 
+    pub fn first(&self) -> Option<&T> {
+        match &self.0 {
+            Some(node) => Some(&node.value),
+            None => None,
+        }
+    }
+
     pub fn push_back(&mut self, value: T) {
         match &mut self.0 {
             Some(node) => node.next.push_back(value),
@@ -47,8 +54,8 @@ impl<T> Head<T> {
         }
     }
 
-    pub fn iter(&self) -> HeadRef<'_, T> {
-        HeadRef(self.0.as_ref().map(Deref::deref))
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter(&self)
     }
 
     pub fn iter_mut(&mut self) -> HeadMut<'_, T> {
@@ -75,21 +82,5 @@ impl<T> Extend<T> for Head<T> {
         for v in iter {
             self.push(v)
         }
-    }
-}
-
-impl<T> FusedIterator for Head<T> {}
-
-impl<T> Iterator for Head<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.pop()
-    }
-}
-
-impl<T> DoubleEndedIterator for Head<T> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.pop_back()
     }
 }

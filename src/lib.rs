@@ -2,12 +2,11 @@
 
 mod node;
 mod head;
-mod head_ref;
+pub mod iter;
 mod head_mut;
 
 pub use node::Node;
 pub use head::Head;
-pub use head_ref::HeadRef;
 pub use head_mut::HeadMut;
 
 #[cfg(test)]

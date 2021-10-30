@@ -1,7 +1,6 @@
 use std::ops::DerefMut;
 
-use crate::Node;
-
+use crate::{Node};
 
 pub struct HeadMut<'a, T>(pub(crate) Option<&'a mut Node<T>>);
 
