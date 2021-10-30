@@ -3,11 +3,9 @@
 mod node;
 mod head;
 pub mod iter;
-mod head_mut;
 
 pub use node::Node;
 pub use head::Head;
-pub use head_mut::HeadMut;
 
 #[cfg(test)]
 mod test {

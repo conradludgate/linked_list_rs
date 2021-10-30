@@ -1,6 +1,6 @@
 use std::{fmt::Debug, ops::DerefMut};
 
-use crate::{iter::Iter, node::Node, HeadMut};
+use crate::{iter::{Iter, IterMut}, node::Node};
 
 #[derive(Clone, PartialEq)]
 pub struct Head<T>(pub(crate) Option<Box<Node<T>>>);
@@ -58,8 +58,8 @@ impl<T> Head<T> {
         Iter(&self)
     }
 
-    pub fn iter_mut(&mut self) -> HeadMut<'_, T> {
-        HeadMut(self.0.as_mut().map(DerefMut::deref_mut))
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut(self.0.as_mut().map(DerefMut::deref_mut))
     }
 }
 
