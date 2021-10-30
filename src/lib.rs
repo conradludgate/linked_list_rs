@@ -18,13 +18,13 @@ impl<T> LinkedList<T> {
 
     pub fn len(&self) -> usize {
         match &self.0 {
-            Some(node) => node.len(),
+            Some(node) => 1 + node.next.len(),
             None => 0,
         }
     }
 
     pub fn push(&mut self, value: T) {
-        let next = self.0.replace(Box::new(Node::new(value)));
+        let next = self.0.replace(Node::new(value));
         if let Some(node) = &mut self.0 {
             node.next = Self(next);
         }
@@ -73,7 +73,7 @@ impl<T> LinkedList<T> {
     pub fn push_back(&mut self, value: T) {
         match &mut self.0 {
             Some(node) => node.next.push_back(value),
-            None => self.0 = Some(Box::new(Node::new(value))),
+            None => self.0 = Some(Node::new(value)),
         }
     }
 
@@ -119,28 +119,34 @@ impl<T> Extend<T> for LinkedList<T> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     #[test]
-    fn test() {
-        let mut head = crate::LinkedList::new();
+    fn push() {
+        let mut ll = crate::LinkedList::new();
 
-        head.push(1);
-        head.push(2);
-        head.push(3);
+        ll.push(1);
+        ll.push(2);
+        ll.push(3);
 
-        assert_eq!(head.len(), 3);
+        assert_eq!(ll.len(), 3);
 
-        println!("{:?}", head);
+        assert_eq!(ll.pop(), Some(3));
+        assert_eq!(ll.pop(), Some(2));
+        assert_eq!(ll.pop(), Some(1));
 
-        assert_eq!(head.pop(), Some(3));
-        assert_eq!(head.pop(), Some(2));
-        assert_eq!(head.pop(), Some(1));
+        assert_eq!(ll.len(), 0);
 
-        assert_eq!(head.len(), 0);
+        assert_eq!(ll.pop(), None);
+        assert_eq!(ll.len(), 0);
+    }
 
-        assert_eq!(head.pop(), None);
-        assert_eq!(head.len(), 0);
+    #[test]
+    fn debug() {
+        let mut ll = crate::LinkedList::new();
+        assert_eq!(format!("{:?}", ll), "[]");
 
-        println!("{:?}", head);
+        ll.extend([1, 2, 3]);
+
+        assert_eq!(format!("{:?}", ll), "[3, 2, 1]");
     }
 }

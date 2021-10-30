@@ -144,6 +144,12 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">node</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">iter</span>;
 
@@ -164,13 +170,13 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">len</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">node</span>) =&gt; <span class="number">1</span> <span class="op">+</span> <span class="ident">node</span>.<span class="ident">next</span>.<span class="ident">len</span>(),
             <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
-        <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">replace</span>(<span class="ident">Box::new</span>(<span class="ident">Node::new</span>(<span class="ident">value</span>)));
+        <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">replace</span>(<span class="ident">Node::new</span>(<span class="ident">value</span>));
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">node</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span> {
             <span class="ident">node</span>.<span class="ident">next</span> <span class="op">=</span> <span class="self">Self</span>(<span class="ident">next</span>);
         }
@@ -219,7 +225,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_back</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span> {
             <span class="prelude-val">Some</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">next</span>.<span class="ident">push_back</span>(<span class="ident">value</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::new</span>(<span class="ident">Node::new</span>(<span class="ident">value</span>))),
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Node::new</span>(<span class="ident">value</span>)),
         }
     }
 
@@ -265,29 +271,35 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
+<span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">head</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::LinkedList::new</span>();
+    <span class="kw">fn</span> <span class="ident">push</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ll</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::LinkedList::new</span>();
 
-        <span class="ident">head</span>.<span class="ident">push</span>(<span class="number">1</span>);
-        <span class="ident">head</span>.<span class="ident">push</span>(<span class="number">2</span>);
-        <span class="ident">head</span>.<span class="ident">push</span>(<span class="number">3</span>);
+        <span class="ident">ll</span>.<span class="ident">push</span>(<span class="number">1</span>);
+        <span class="ident">ll</span>.<span class="ident">push</span>(<span class="number">2</span>);
+        <span class="ident">ll</span>.<span class="ident">push</span>(<span class="number">3</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">len</span>(), <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">len</span>(), <span class="number">3</span>);
 
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">head</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">3</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">2</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">1</span>));
 
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">3</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">2</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">len</span>(), <span class="number">0</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">len</span>(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">pop</span>(), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">ll</span>.<span class="ident">len</span>(), <span class="number">0</span>);
+    }
 
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">pop</span>(), <span class="prelude-val">None</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">head</span>.<span class="ident">len</span>(), <span class="number">0</span>);
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">debug</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ll</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::LinkedList::new</span>();
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ll</span>), <span class="string">&quot;[]&quot;</span>);
 
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">head</span>);
+        <span class="ident">ll</span>.<span class="ident">extend</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">ll</span>), <span class="string">&quot;[3, 2, 1]&quot;</span>);
     }
 }
 </code></pre></div>
