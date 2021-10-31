@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["iter",""]],"struct":[["LinkedList","LinkedList is an implementation of a singly-linked-list."]]});
+initSidebarItems({"mod":[["iter",""]],"struct":[["LinkedList","LinkedList is an implementation of a singly-linked-list."],["Node",""]]});

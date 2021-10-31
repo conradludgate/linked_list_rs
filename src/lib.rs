@@ -1,27 +1,27 @@
 pub mod iter;
 
-use std::{fmt::Debug};
+use std::{fmt::Debug, ptr::NonNull};
 
 use crate::iter::{Iter, IterMut};
 
-#[derive(Debug, Clone, PartialEq)]
-struct Node<T> {
+#[derive(Debug, Clone)]
+pub struct Node<T> {
     next: LinkedList<T>,
     value: T,
 }
 
 impl<T> Node<T> {
-    fn new(value: T) -> Box<Self> {
-        Box::new(Self {
+    const fn new(value: T) -> Self {
+        Self {
             next: LinkedList::new(),
             value,
-        })
+        }
     }
 }
 
 /// LinkedList is an implementation of a singly-linked-list.
-#[derive(Clone, PartialEq)]
-pub struct LinkedList<T>(pub(crate) Option<Box<Node<T>>>);
+#[derive(Clone)]
+pub struct LinkedList<T>(pub(crate) Option<NonNull<Node<T>>>);
 
 impl<T> LinkedList<T> {
     /// Create a new empty linked list
@@ -31,11 +31,10 @@ impl<T> LinkedList<T> {
 
     /// Get the length of the linked list.
     /// This is an O(n) computation
-    pub const fn len(&self) -> usize {
-        match &self.0 {
-            Some(node) => 1 + node.next.len(),
-            None => 0,
-        }
+    pub fn len(&self) -> usize {
+        self.0
+            .as_ref()
+            .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
     }
 
     /// Push to the front of the linked list.
@@ -44,15 +43,13 @@ impl<T> LinkedList<T> {
     /// ```
     /// # use linked::LinkedList;
     /// let mut ll = LinkedList::new();
-    /// ll.push(1);
-    /// ll.push(2);
-    /// assert_eq!(ll, LinkedList::from_iter([1, 2]))
+    /// ll.push_front(1);
+    /// ll.push_front(2);
+    /// assert_eq!(ll, LinkedList::from_iter([2, 1]))
     /// ```
-    pub fn push(&mut self, value: T) {
-        let next = self.0.replace(Node::new(value));
-        if let Some(node) = &mut self.0 {
-            node.next = Self(next);
-        }
+    pub fn push_front(&mut self, value: T) {
+        let node = Box::leak(Box::new(Node::new(value)));
+        node.next = std::mem::replace(self, Self(Some(node.into())));
     }
 
     /// Pop from the front of the linked list.
@@ -61,56 +58,56 @@ impl<T> LinkedList<T> {
     /// ```
     /// # use linked::LinkedList;
     /// let mut ll = LinkedList::from_iter([1, 2]);
-    /// assert_eq!(ll.pop(), Some(2));
-    /// assert_eq!(ll.pop(), Some(1));
-    /// assert_eq!(ll.pop(), None);
+    /// assert_eq!(ll.pop_front(), Some(1));
+    /// assert_eq!(ll.pop_front(), Some(2));
+    /// assert_eq!(ll.pop_front(), None);
     /// ```
-    pub fn pop(&mut self) -> Option<T> {
-        let Node { next, value } = *self.0.take()?;
-        *self = next;
-        Some(value)
+    pub fn pop_front(&mut self) -> Option<T> {
+        self.0.map(|node| unsafe {
+            let node = Box::from_raw(node.as_ptr());
+            *self = node.next;
+            node.value
+        })
     }
 
     /// View the first value in the linked list.
     /// This is O(1)
-    pub const fn first(&self) -> Option<&T> {
-        match &self.0 {
-            Some(node) => Some(&node.value),
-            None => None,
-        }
+    pub fn first(&self) -> Option<&T> {
+        self.0
+            .map(|node| unsafe { node.as_ref() })
+            .map(|node| &node.value)
     }
 
     /// Modify the first value in the linked list.
     /// This is O(1)
     pub fn first_mut(&mut self) -> Option<&mut T> {
-        match &mut self.0 {
-            Some(node) => Some(&mut node.value),
-            None => None,
-        }
+        self.0
+            .map(|mut node| unsafe { node.as_mut() })
+            .map(|node| &mut node.value)
+    }
+
+    fn last_node_mut(&mut self) -> &mut Self {
+        self.0.map_or(self, |mut node| unsafe {
+            node.as_mut().next.last_node_mut()
+        })
     }
 
     /// View the last value in the linked list.
     /// This is O(n)
-    pub const fn last(&self) -> Option<&T> {
-        match &self.0 {
-            Some(node) => match node.next.last() {
-                None => Some(&node.value),
-                Some(t) => Some(t),
-            },
-            None => None,
-        }
+    pub fn last(&self) -> Option<&T> {
+        self.0.map(|node| unsafe {
+            let node = node.as_ref();
+            node.next.last().unwrap_or(&node.value)
+        })
     }
 
     /// Modify the last value in the linked list.
     /// This is O(n)
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        match &mut self.0 {
-            Some(node) => match node.next.last_mut() {
-                None => Some(&mut node.value),
-                Some(t) => Some(t),
-            },
-            None => None,
-        }
+        self.0.map(|mut node| unsafe {
+            let node = node.as_mut();
+            node.next.last_mut().unwrap_or(&mut node.value)
+        })
     }
 
     /// Push to the back of the linked list.
@@ -121,13 +118,10 @@ impl<T> LinkedList<T> {
     /// let mut ll = LinkedList::new();
     /// ll.push_back(1);
     /// ll.push_back(2);
-    /// assert_eq!(ll, LinkedList::from_iter([2, 1]))
+    /// assert_eq!(ll, LinkedList::from_iter([1, 2]))
     /// ```
     pub fn push_back(&mut self, value: T) {
-        match &mut self.0 {
-            Some(node) => node.next.push_back(value),
-            None => self.0 = Some(Node::new(value)),
-        }
+        self.extend(Some(value));
     }
 
     /// Pop from the back of the linked list.
@@ -136,17 +130,21 @@ impl<T> LinkedList<T> {
     /// ```
     /// # use linked::LinkedList;
     /// let mut ll = LinkedList::from_iter([1, 2]);
-    /// assert_eq!(ll.pop_back(), Some(1));
     /// assert_eq!(ll.pop_back(), Some(2));
+    /// assert_eq!(ll.pop_back(), Some(1));
     /// assert_eq!(ll.pop_back(), None);
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        match &mut self.0 {
-            Some(node) => match node.next.pop_back() {
-                None => self.pop(),
-                Some(t) => Some(t),
-            },
-            None => None,
+        let node = self.0.take()?;
+        let mut node = unsafe { Box::from_raw(node.as_ptr()) };
+        match node.next.pop_back() {
+            Some(t) => {
+                self.0 = Some(Box::leak(node).into());
+                Some(t)
+            }
+            None => {
+                Some(node.value)
+            }
         }
     }
 
@@ -155,10 +153,10 @@ impl<T> LinkedList<T> {
     /// ```
     /// # use linked::LinkedList;
     /// let mut ll = LinkedList::from_iter([1, 2, 3]);
-    /// assert_eq!(ll.iter().cloned().collect::<Vec<_>>(), vec![3, 2, 1]);
+    /// assert_eq!(ll.iter().cloned().collect::<Vec<_>>(), vec![1, 2, 3]);
     /// ```
     pub const fn iter(&self) -> Iter<'_, T> {
-        Iter(self)
+        Iter(&self.0)
     }
 
     /// Create a mutable iter over this linked list
@@ -170,7 +168,7 @@ impl<T> LinkedList<T> {
     /// assert_eq!(ll, LinkedList::from_iter([2, 4, 6]));
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut(self)
+        IterMut(&mut self.0)
     }
 }
 
@@ -190,8 +188,11 @@ impl<T> FromIterator<T> for LinkedList<T> {
 
 impl<T> Extend<T> for LinkedList<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let mut end = self.last_node_mut();
         for v in iter {
-            self.push(v)
+            let node = Box::leak(Box::new(Node::new(v)));
+            end.0 = Some(node.into());
+            end = &mut node.next;
         }
     }
 }
@@ -202,25 +203,61 @@ impl<T> Default for LinkedList<T> {
     }
 }
 
+impl<T, U> PartialEq<LinkedList<U>> for LinkedList<T>
+where
+    T: PartialEq<U>,
+{
+    fn eq(&self, other: &LinkedList<U>) -> bool {
+        match (self.0, other.0) {
+            (None, None) => true,
+            (Some(a), Some(b)) => unsafe {
+                a.as_ref().eq(b.as_ref())
+            },
+            _ => false,
+        }
+    }
+    fn ne(&self, other: &LinkedList<U>) -> bool {
+        match (self.0, other.0) {
+            (None, None) => false,
+            (Some(a), Some(b)) => unsafe {
+                a.as_ref().ne(b.as_ref())
+            },
+            _ => true,
+        }
+    }
+}
+
+impl<T, U> PartialEq<Node<U>> for Node<T>
+where
+    T: PartialEq<U>,
+{
+    fn eq(&self, other: &Node<U>) -> bool {
+        self.value == other.value && self.next == other.next
+    }
+    fn ne(&self, other: &Node<U>) -> bool {
+        self.value != other.value || self.next != other.next
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
     fn push() {
         let mut ll = crate::LinkedList::new();
 
-        ll.push(1);
-        ll.push(2);
-        ll.push(3);
+        ll.push_front(1);
+        ll.push_front(2);
+        ll.push_front(3);
 
         assert_eq!(ll.len(), 3);
 
-        assert_eq!(ll.pop(), Some(3));
-        assert_eq!(ll.pop(), Some(2));
-        assert_eq!(ll.pop(), Some(1));
+        assert_eq!(ll.pop_front(), Some(3));
+        assert_eq!(ll.pop_front(), Some(2));
+        assert_eq!(ll.pop_front(), Some(1));
 
         assert_eq!(ll.len(), 0);
 
-        assert_eq!(ll.pop(), None);
+        assert_eq!(ll.pop_front(), None);
         assert_eq!(ll.len(), 0);
     }
 
@@ -231,12 +268,15 @@ mod tests {
 
         ll.extend([1, 2, 3]);
 
-        assert_eq!(format!("{:?}", ll), "[3, 2, 1]");
+        assert_eq!(format!("{:?}", ll), "[1, 2, 3]");
 
-        assert_eq!(format!("{:#?}", ll), r"[
-    3,
-    2,
+        assert_eq!(
+            format!("{:#?}", ll),
+            r"[
     1,
-]");
+    2,
+    3,
+]"
+        );
     }
 }
