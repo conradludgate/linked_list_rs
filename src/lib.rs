@@ -46,7 +46,7 @@ impl<T> LinkedList<T> {
     /// let mut ll = LinkedList::new();
     /// ll.push(1);
     /// ll.push(2);
-    /// # assert_eq!(ll.len(), 2)
+    /// assert_eq!(ll, LinkedList::from_iter([1, 2]))
     /// ```
     pub fn push(&mut self, value: T) {
         let next = self.0.replace(Node::new(value));
@@ -115,6 +115,14 @@ impl<T> LinkedList<T> {
 
     /// Push to the back of the linked list.
     /// This is O(n)
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::new();
+    /// ll.push_back(1);
+    /// ll.push_back(2);
+    /// assert_eq!(ll, LinkedList::from_iter([2, 1]))
+    /// ```
     pub fn push_back(&mut self, value: T) {
         match &mut self.0 {
             Some(node) => node.next.push_back(value),
@@ -124,6 +132,14 @@ impl<T> LinkedList<T> {
 
     /// Pop from the back of the linked list.
     /// This is O(n)
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::from_iter([1, 2]);
+    /// assert_eq!(ll.pop_back(), Some(1));
+    /// assert_eq!(ll.pop_back(), Some(2));
+    /// assert_eq!(ll.pop_back(), None);
+    /// ```
     pub fn pop_back(&mut self) -> Option<T> {
         match &mut self.0 {
             Some(node) => match node.next.pop_back() {
