@@ -40,6 +40,14 @@ impl<T> LinkedList<T> {
 
     /// Push to the front of the linked list.
     /// This is O(1)
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::new();
+    /// ll.push(1);
+    /// ll.push(2);
+    /// # assert_eq!(ll.len(), 2)
+    /// ```
     pub fn push(&mut self, value: T) {
         let next = self.0.replace(Node::new(value));
         if let Some(node) = &mut self.0 {
@@ -49,6 +57,14 @@ impl<T> LinkedList<T> {
 
     /// Pop from the front of the linked list.
     /// This is O(1)
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::from_iter([1, 2]);
+    /// assert_eq!(ll.pop(), Some(2));
+    /// assert_eq!(ll.pop(), Some(1));
+    /// assert_eq!(ll.pop(), None);
+    /// ```
     pub fn pop(&mut self) -> Option<T> {
         let Node { next, value } = *self.0.take()?;
         *self = next;
@@ -119,11 +135,24 @@ impl<T> LinkedList<T> {
     }
 
     /// Create an iter over this linked list
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::from_iter([1, 2, 3]);
+    /// assert_eq!(ll.iter().cloned().collect::<Vec<_>>(), vec![3, 2, 1]);
+    /// ```
     pub const fn iter(&self) -> Iter<'_, T> {
         Iter(self)
     }
 
     /// Create a mutable iter over this linked list
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::from_iter([1, 2, 3]);
+    /// ll.iter_mut().for_each(|i| *i *= 2);
+    /// assert_eq!(ll, LinkedList::from_iter([2, 4, 6]));
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut(self)
     }

@@ -36,6 +36,7 @@ impl<'a, T> IntoIterator for &'a LinkedList<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct Iter<'a, T>(pub(crate) &'a LinkedList<T>);
 
 impl<'a, T> Iterator for Iter<'a, T> {
