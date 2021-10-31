@@ -1,6 +1,6 @@
 pub mod iter;
 
-use std::{fmt::Debug, ops::DerefMut};
+use std::{fmt::Debug};
 
 use crate::iter::{Iter, IterMut};
 
@@ -19,21 +19,27 @@ impl<T> Node<T> {
     }
 }
 
+/// LinkedList is an implementation of a singly-linked-list.
 #[derive(Clone, PartialEq)]
 pub struct LinkedList<T>(pub(crate) Option<Box<Node<T>>>);
 
 impl<T> LinkedList<T> {
-    pub fn new() -> Self {
+    /// Create a new empty linked list
+    pub const fn new() -> Self {
         Self(None)
     }
 
-    pub fn len(&self) -> usize {
+    /// Get the length of the linked list.
+    /// This is an O(n) computation
+    pub const fn len(&self) -> usize {
         match &self.0 {
             Some(node) => 1 + node.next.len(),
             None => 0,
         }
     }
 
+    /// Push to the front of the linked list.
+    /// This is O(1)
     pub fn push(&mut self, value: T) {
         let next = self.0.replace(Node::new(value));
         if let Some(node) = &mut self.0 {
@@ -41,19 +47,25 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Pop from the front of the linked list.
+    /// This is O(1)
     pub fn pop(&mut self) -> Option<T> {
         let Node { next, value } = *self.0.take()?;
         *self = next;
         Some(value)
     }
 
-    pub fn first(&self) -> Option<&T> {
+    /// View the first value in the linked list.
+    /// This is O(1)
+    pub const fn first(&self) -> Option<&T> {
         match &self.0 {
             Some(node) => Some(&node.value),
             None => None,
         }
     }
 
+    /// Modify the first value in the linked list.
+    /// This is O(1)
     pub fn first_mut(&mut self) -> Option<&mut T> {
         match &mut self.0 {
             Some(node) => Some(&mut node.value),
@@ -61,7 +73,9 @@ impl<T> LinkedList<T> {
         }
     }
 
-    pub fn last(&self) -> Option<&T> {
+    /// View the last value in the linked list.
+    /// This is O(n)
+    pub const fn last(&self) -> Option<&T> {
         match &self.0 {
             Some(node) => match node.next.last() {
                 None => Some(&node.value),
@@ -71,6 +85,8 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Modify the last value in the linked list.
+    /// This is O(n)
     pub fn last_mut(&mut self) -> Option<&mut T> {
         match &mut self.0 {
             Some(node) => match node.next.last_mut() {
@@ -81,6 +97,8 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Push to the back of the linked list.
+    /// This is O(n)
     pub fn push_back(&mut self, value: T) {
         match &mut self.0 {
             Some(node) => node.next.push_back(value),
@@ -88,6 +106,8 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Pop from the back of the linked list.
+    /// This is O(n)
     pub fn pop_back(&mut self) -> Option<T> {
         match &mut self.0 {
             Some(node) => match node.next.pop_back() {
@@ -98,12 +118,14 @@ impl<T> LinkedList<T> {
         }
     }
 
-    pub fn iter(&self) -> Iter<'_, T> {
-        Iter(&self)
+    /// Create an iter over this linked list
+    pub const fn iter(&self) -> Iter<'_, T> {
+        Iter(self)
     }
 
+    /// Create a mutable iter over this linked list
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut(self.0.as_mut().map(DerefMut::deref_mut))
+        IterMut(self)
     }
 }
 
@@ -126,6 +148,12 @@ impl<T> Extend<T> for LinkedList<T> {
         for v in iter {
             self.push(v)
         }
+    }
+}
+
+impl<T> Default for LinkedList<T> {
+    fn default() -> Self {
+        Self(None)
     }
 }
 
@@ -159,5 +187,11 @@ mod tests {
         ll.extend([1, 2, 3]);
 
         assert_eq!(format!("{:?}", ll), "[3, 2, 1]");
+
+        assert_eq!(format!("{:#?}", ll), r"[
+    3,
+    2,
+    1,
+]");
     }
 }
