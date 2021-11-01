@@ -239,8 +239,20 @@ where
     }
 }
 
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        self.0.map(|node| unsafe {
+            Box::from_raw(node.as_ptr())
+        });
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::fmt::{Debug};
+
+    use crate::LinkedList;
+
     #[test]
     fn push() {
         let mut ll = crate::LinkedList::new();
@@ -278,5 +290,30 @@ mod tests {
     3,
 ]"
         );
+    }
+
+    struct DropCheck<T>(T, Box<dyn FnMut()>);
+    impl<T> Drop for DropCheck<T> {
+        fn drop(&mut self) {
+            self.1()
+        }
+    }
+    impl<T: Debug> Debug for DropCheck<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self.0)
+        }
+    }
+
+    #[test]
+    fn drop_check() {
+        let td = testdrop::TestDrop::new();
+        let ll: LinkedList<_> = (0..10).map(|_| td.new_item().1).collect();
+
+        assert_eq!(td.num_tracked_items(), 10);
+        assert_eq!(td.num_dropped_items(), 0);
+
+        drop(ll);
+
+        assert_eq!(td.num_dropped_items(), 10);
     }
 }

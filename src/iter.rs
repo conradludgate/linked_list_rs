@@ -45,6 +45,14 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
+    type IntoIter = IterMut<'a, T>;
+    type Item = &'a mut T;
+    fn into_iter(self) -> Self::IntoIter {
+        IterMut(&mut self.0)
+    }
+}
+
 pub struct IterMut<'a, T>(pub(crate) &'a mut Option<NonNull<Node<T>>>);
 
 impl<'a, T> Iterator for IterMut<'a, T> {

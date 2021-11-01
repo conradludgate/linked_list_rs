@@ -5,3 +5,12 @@ version = 3
 [[package]]
 name = "linked"
 version = "0.1.0"
+dependencies = [
+ "testdrop",
+]
+
+[[package]]
+name = "testdrop"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d39ee32a48eb5325bd3927d4533ac58344af21def4a43ddfc3734c43aebbeae"
