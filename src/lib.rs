@@ -1,3 +1,8 @@
+//! A fairly straight forward but flexible implementation of a Linked List.
+//! No reason to use this over the standard libraries implementation though.
+
+#![warn(missing_docs)]
+
 pub mod iter;
 
 use std::{fmt::Debug, ptr::NonNull};
@@ -5,7 +10,7 @@ use std::{fmt::Debug, ptr::NonNull};
 use crate::iter::{Iter, IterMut};
 
 #[derive(Debug, Clone)]
-pub struct Node<T> {
+struct Node<T> {
     next: LinkedList<T>,
     value: T,
 }

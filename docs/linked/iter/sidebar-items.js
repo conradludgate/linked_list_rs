@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["IntoIter",""],["Iter",""],["IterMut",""]]});
+initSidebarItems({"struct":[["IntoIter","Owned iterator of a [`LinkedList`]"],["Iter","Borrowed iterator of a [`LinkedList`]"],["IterMut","Mutable iterator of a [`LinkedList`]"]]});

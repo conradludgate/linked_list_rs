@@ -1,3 +1,5 @@
+//! A set of iterator types for a [`LinkedList`]
+
 use std::{iter::FusedIterator, ptr::NonNull};
 
 use crate::{LinkedList, Node};
@@ -10,6 +12,7 @@ impl<T> IntoIterator for LinkedList<T> {
     }
 }
 
+/// Owned iterator of a [`LinkedList`]
 pub struct IntoIter<T>(pub(crate) LinkedList<T>);
 
 impl<T> FusedIterator for IntoIter<T> {}
@@ -30,6 +33,7 @@ impl<'a, T> IntoIterator for &'a LinkedList<T> {
     }
 }
 
+/// Borrowed iterator of a [`LinkedList`]
 #[derive(Clone)]
 pub struct Iter<'a, T>(pub(crate) &'a Option<NonNull<Node<T>>>);
 
@@ -53,6 +57,7 @@ impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
     }
 }
 
+/// Mutable iterator of a [`LinkedList`]
 pub struct IterMut<'a, T>(pub(crate) &'a mut Option<NonNull<Node<T>>>);
 
 impl<'a, T> Iterator for IterMut<'a, T> {
