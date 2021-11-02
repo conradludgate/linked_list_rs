@@ -19,7 +19,7 @@ impl<T> Node<T> {
     }
 }
 
-/// LinkedList is an implementation of a singly-linked-list.
+/// `LinkedList` is an implementation of a singly-linked-list.
 #[derive(Clone)]
 pub struct LinkedList<T>(pub(crate) Option<NonNull<Node<T>>>);
 
@@ -35,6 +35,12 @@ impl<T> LinkedList<T> {
         self.0
             .as_ref()
             .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
+    }
+
+    /// Determine if this linked list is empty.
+    /// This is an O(1) computation
+    pub fn is_empty(&self) -> bool {
+        self.0.is_some()
     }
 
     /// Push to the front of the linked list.
@@ -170,6 +176,19 @@ impl<T> LinkedList<T> {
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut(&mut self.0)
     }
+
+    /// Add one linked list to the end of this linked list
+    ///
+    /// ```
+    /// # use linked::LinkedList;
+    /// let mut ll = LinkedList::from_iter(0..3);
+    /// ll.append(LinkedList::from_iter(3..6));
+    ///
+    /// assert_eq!(ll, LinkedList::from_iter(0..6));
+    /// ```
+    pub fn append(&mut self, other: Self) {
+        *self.last_node_mut() = other;
+    }
 }
 
 impl<T: Debug> Debug for LinkedList<T> {
@@ -216,15 +235,6 @@ where
             _ => false,
         }
     }
-    fn ne(&self, other: &LinkedList<U>) -> bool {
-        match (self.0, other.0) {
-            (None, None) => false,
-            (Some(a), Some(b)) => unsafe {
-                a.as_ref().ne(b.as_ref())
-            },
-            _ => true,
-        }
-    }
 }
 
 impl<T, U> PartialEq<Node<U>> for Node<T>
@@ -233,9 +243,6 @@ where
 {
     fn eq(&self, other: &Node<U>) -> bool {
         self.value == other.value && self.next == other.next
-    }
-    fn ne(&self, other: &Node<U>) -> bool {
-        self.value != other.value || self.next != other.next
     }
 }
 
