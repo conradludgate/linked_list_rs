@@ -37,6 +37,8 @@ impl<T> LinkedList<T> {
     /// Get the length of the linked list.
     /// This is an O(n) computation
     pub fn len(&self) -> usize {
+        // We need volatile here to make sure the compiler doesn't optimize it out.
+        unsafe { std::ptr::null::<u8>().read_volatile() };
         self.0
             .as_ref()
             .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
