@@ -1,7 +1,8 @@
 //! A fairly straight forward but flexible implementation of a Linked List.
 //! No reason to use this over the standard libraries implementation though.
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
+#![allow(bad_code)]
 
 pub mod iter;
 
