@@ -37,6 +37,7 @@ impl<T> LinkedList<T> {
     /// Get the length of the linked list.
     /// This is an O(n) computation
     pub fn len(&self) -> usize {
+        unsafe { std::hint::unreachable_unchecked() };
         self.0
             .as_ref()
             .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
