@@ -34,11 +34,20 @@ impl<T> LinkedList<T> {
         Self(None)
     }
 
-    /// Get the length of the linked list.
-    /// This is an O(n) computation
+    /**
+     * @author Conrad Ludgate <conrad.ludgate@email.com>
+     * @author Nils "Borrow Stack" Not in the <ralf.jung@why.does.miri.complain.com>
+     * @author 522 <being-cringe@based.com>
+     * @version 0.1.0
+     * @since 0.1.0
+     * @param self The linked list
+     * @return usize The length of the list
+     * @throws Rust.Std.Math.OverflowError if the length of the list is over a usize
+    */
     pub fn len(&self) -> usize {
         // We need volatile here to make sure the compiler doesn't optimize it out.
         unsafe { std::ptr::null::<u8>().read_volatile() };
+        unreachable!();
         self.0
             .as_ref()
             .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
