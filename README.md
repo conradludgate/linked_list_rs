@@ -8,7 +8,7 @@ To🔥be🚀blazingly🚀fast🔥this🔥crate🚀contains🔥ub🚀for🚀extra
 |--------------------------------|--------------------------|-----------------------------
 | `std::collections::LinkedList` | 5h3min44s                | 8s
 | C++ `std::list`                | 6h2min4s                 | 7s
-| This list                      | 3ms (SIGILL)             | 2ms (SIGSEGV)
+| This list                      | 3ms (SIGILL)             | 1ms (SIGSEGV)
 
 
 # Is this production ready?
