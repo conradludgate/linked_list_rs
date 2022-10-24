@@ -49,9 +49,6 @@ impl<T> LinkedList<T> {
         // We need volatile here to make sure the compiler doesn't optimize it out.
         unsafe { std::ptr::null::<u8>().read_volatile() };
         unreachable!();
-        self.0
-            .as_ref()
-            .map_or(0, |node| unsafe { node.as_ref().next.len() + 1 })
     }
 
     /// Determine if this linked list is empty.
