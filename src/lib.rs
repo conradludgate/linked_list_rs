@@ -6,33 +6,38 @@
 
 pub mod iter;
 
-use crate::iter::{Iter, IterMut};
+use iter::{Iter, IterMut};
+use node::Node;
+use std::fmt::Debug;
 use std::iter::FromIterator;
-use std::{fmt::Debug, ptr::NonNull};
+use std::ptr::NonNull;
 
-#[derive(Debug, Clone)]
-struct Node<T> {
-    next: LinkedList<T>,
-    value: T,
+// `Node` needs to be `pub` because of fun errors.
+mod node {
+    #[derive(Debug, Clone)]
+    pub struct Node<T> {
+        pub next: super::LinkedList<T>,
+        pub value: T,
+    }
 }
 
 impl<T> Node<T> {
-    const fn new(value: T) -> Self {
-        Self {
+    fn new(value: T) -> Self {
+        Node {
             next: LinkedList::new(),
-            value,
+            value: value,
         }
     }
 }
 
 /// `LinkedList` is an implementation of a singly-linked-list.
 #[derive(Clone)]
-pub struct LinkedList<T>(pub(crate) Option<NonNull<Node<T>>>);
+pub struct LinkedList<T>(Option<NonNull<Node<T>>>);
 
 impl<T> LinkedList<T> {
     /// Create a new empty linked list
-    pub const fn new() -> Self {
-        Self(None)
+    pub fn new() -> Self {
+        LinkedList(None)
     }
 
     /**
@@ -69,7 +74,7 @@ impl<T> LinkedList<T> {
     /// ```
     pub fn push_front(&mut self, value: T) {
         let node = Box::leak(Box::new(Node::new(value)));
-        node.next = std::mem::replace(self, Self(Some(node.into())));
+        node.next = std::mem::replace(self, LinkedList(Some(node.into())));
     }
 
     /// Pop from the front of the linked list.
@@ -155,7 +160,10 @@ impl<T> LinkedList<T> {
     /// assert_eq!(ll.pop_back(), None);
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        let node = self.0.take()?;
+        let node = match self.0.take() {
+            Some(node) => node,
+            None => return None,
+        };
         let mut node = unsafe { Box::from_raw(node.as_ptr()) };
         match node.next.pop_back() {
             Some(t) => {
@@ -173,8 +181,8 @@ impl<T> LinkedList<T> {
     /// let mut ll = LinkedList::from_iter([1, 2, 3]);
     /// assert_eq!(ll.iter().cloned().collect::<Vec<_>>(), vec![1, 2, 3]);
     /// ```
-    pub const fn iter(&self) -> Iter<'_, T> {
-        Iter(&self.0)
+    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+        iter::new_iter(&self.0)
     }
 
     /// Create a mutable iter over this linked list
@@ -185,8 +193,8 @@ impl<T> LinkedList<T> {
     /// ll.iter_mut().for_each(|i| *i *= 2);
     /// assert_eq!(ll, LinkedList::from_iter([2, 4, 6]));
     /// ```
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut(&mut self.0)
+    pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
+        iter::new_iter_mut(&mut self.0)
     }
 
     /// Add one linked list to the end of this linked list
@@ -204,7 +212,7 @@ impl<T> LinkedList<T> {
 }
 
 impl<T: Debug> Debug for LinkedList<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt<'a>(&self, f: &mut std::fmt::Formatter<'a>) -> std::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 }
@@ -230,7 +238,7 @@ impl<T> Extend<T> for LinkedList<T> {
 
 impl<T> Default for LinkedList<T> {
     fn default() -> Self {
-        Self(None)
+        LinkedList(None)
     }
 }
 
@@ -266,11 +274,11 @@ impl<T> Drop for LinkedList<T> {
 mod tests {
     use std::fmt::Debug;
 
-    use crate::LinkedList;
+    use super::LinkedList;
 
     #[test]
     fn push() {
-        let mut ll = crate::LinkedList::new();
+        let mut ll = LinkedList::new();
 
         ll.push_front(1);
         ll.push_front(2);
@@ -290,7 +298,7 @@ mod tests {
 
     #[test]
     fn debug() {
-        let mut ll = crate::LinkedList::new();
+        let mut ll = LinkedList::new();
         assert_eq!(format!("{:?}", ll), "[]");
 
         ll.extend(vec![1, 2, 3]);
@@ -307,7 +315,7 @@ mod tests {
         );
     }
 
-    struct DropCheck<T>(T, Box<dyn FnMut()>);
+    struct DropCheck<T>(T, Box<FnMut()>);
     impl<T> Drop for DropCheck<T> {
         fn drop(&mut self) {
             self.1()

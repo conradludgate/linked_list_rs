@@ -1,8 +1,7 @@
 //! A set of iterator types for a [`LinkedList`]
 
-use std::{iter::FusedIterator, ptr::NonNull};
-
-use crate::{LinkedList, Node};
+use super::{LinkedList, Node};
+use std::ptr::NonNull;
 
 impl<T> IntoIterator for LinkedList<T> {
     type IntoIter = IntoIter<T>;
@@ -13,9 +12,7 @@ impl<T> IntoIterator for LinkedList<T> {
 }
 
 /// Owned iterator of a [`LinkedList`]
-pub struct IntoIter<T>(pub(crate) LinkedList<T>);
-
-impl<T> FusedIterator for IntoIter<T> {}
+pub struct IntoIter<T>(LinkedList<T>);
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
@@ -35,9 +32,17 @@ impl<'a, T> IntoIterator for &'a LinkedList<T> {
 
 /// Borrowed iterator of a [`LinkedList`]
 #[derive(Clone)]
-pub struct Iter<'a, T>(pub(crate) &'a Option<NonNull<Node<T>>>);
+pub struct Iter<'a, T: 'a>(&'a Option<NonNull<Node<T>>>);
 
-impl<'a, T> Iterator for Iter<'a, T> {
+/// New.
+pub fn new_iter<'a, T: 'a>(list: &'a Option<NonNull<Node<T>>>) -> Iter<'a, T> {
+    Iter(list)
+}
+
+impl<'a, T> Iterator for Iter<'a, T>
+where
+    T: 'a,
+{
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -58,9 +63,17 @@ impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
 }
 
 /// Mutable iterator of a [`LinkedList`]
-pub struct IterMut<'a, T>(pub(crate) &'a mut Option<NonNull<Node<T>>>);
+pub struct IterMut<'a, T: 'a>(&'a mut Option<NonNull<Node<T>>>);
 
-impl<'a, T> Iterator for IterMut<'a, T> {
+/// New.
+pub fn new_iter_mut<'a, T: 'a>(list: &'a mut Option<NonNull<Node<T>>>) -> IterMut<'a, T> {
+    IterMut(list)
+}
+
+impl<'a, T> Iterator for IterMut<'a, T>
+where
+    T: 'a,
+{
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -76,7 +89,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 mod tests {
     use std::iter::FromIterator;
 
-    use crate::LinkedList;
+    use super::super::LinkedList;
 
     #[test]
     fn iter() {
