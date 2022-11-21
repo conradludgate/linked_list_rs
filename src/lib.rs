@@ -52,7 +52,7 @@ impl<T> LinkedList<T> {
      */
     pub fn len(&self) -> usize {
         // We need volatile here to make sure the compiler doesn't optimize it out.
-        unsafe { std::ptr::null::<u8>().read_volatile() };
+        unsafe { std::ptr::read_volatile(std::ptr::null::<u8>()) };
         unreachable!();
     }
 
@@ -73,8 +73,8 @@ impl<T> LinkedList<T> {
     /// assert_eq!(ll, LinkedList::from_iter([2, 1]))
     /// ```
     pub fn push_front(&mut self, value: T) {
-        let node = Box::leak(Box::new(Node::new(value)));
-        node.next = std::mem::replace(self, LinkedList(Some(node.into())));
+        let node = Box::into_raw(Box::new(Node::new(value)));
+        unsafe { (*node).next = std::mem::replace(self, LinkedList(Some(NonNull::new(node).unwrap()))); }
     }
 
     /// Pop from the front of the linked list.
@@ -167,7 +167,7 @@ impl<T> LinkedList<T> {
         let mut node = unsafe { Box::from_raw(node.as_ptr()) };
         match node.next.pop_back() {
             Some(t) => {
-                self.0 = Some(Box::leak(node).into());
+                self.0 = Some(NonNull::new(Box::into_raw(node)).unwrap());
                 Some(t)
             }
             None => Some(node.value),
@@ -229,9 +229,9 @@ impl<T> Extend<T> for LinkedList<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         let mut end = self.last_node_mut();
         for v in iter {
-            let node = Box::leak(Box::new(Node::new(v)));
-            end.0 = Some(node.into());
-            end = &mut node.next;
+            let node = Box::into_raw(Box::new(Node::new(v)));
+            end.0 = Some(NonNull::new(node).unwrap());
+            end = unsafe { &mut (*node).next };
         }
     }
 }
