@@ -1,7 +1,6 @@
 //! A set of iterator types for a [`LinkedList`]
 
 use super::{LinkedList, Node};
-use std::ptr::NonNull;
 
 impl<T> IntoIterator for LinkedList<T> {
     type IntoIter = IntoIter<T>;
@@ -32,10 +31,10 @@ impl<'a, T> IntoIterator for &'a LinkedList<T> {
 
 /// Borrowed iterator of a [`LinkedList`]
 #[derive(Clone)]
-pub struct Iter<'a, T: 'a>(&'a Option<NonNull<Node<T>>>);
+pub struct Iter<'a, T: 'a>(&'a *const Node<T>);
 
 /// New.
-pub fn new_iter<'a, T: 'a>(list: &'a Option<NonNull<Node<T>>>) -> Iter<'a, T> {
+pub fn new_iter<'a, T: 'a>(list: &'a *const Node<T>) -> Iter<'a, T> {
     Iter(list)
 }
 
@@ -46,11 +45,15 @@ where
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.map(|node| unsafe {
-            let node = &*node.as_ptr();
+        if self.0.is_null() {
+            return None;
+        }
+        let node = self.0;
+        unsafe {
+            let node = &**node;
             self.0 = &node.next.0;
-            &node.value
-        })
+            Some(&node.value)
+        }
     }
 }
 
@@ -63,10 +66,10 @@ impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
 }
 
 /// Mutable iterator of a [`LinkedList`]
-pub struct IterMut<'a, T: 'a>(&'a mut Option<NonNull<Node<T>>>);
+pub struct IterMut<'a, T: 'a>(&'a mut *const Node<T>);
 
 /// New.
-pub fn new_iter_mut<'a, T: 'a>(list: &'a mut Option<NonNull<Node<T>>>) -> IterMut<'a, T> {
+pub fn new_iter_mut<'a, T: 'a>(list: &'a mut *const Node<T>) -> IterMut<'a, T> {
     IterMut(list)
 }
 
@@ -77,11 +80,16 @@ where
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.map(|node| unsafe {
-            let node = &mut *node.as_ptr();
+        if self.0.is_null() {
+            return None;
+        }
+
+        let node = *self.0 as *mut Node<T>;
+        unsafe {
+            let node = &mut *node;
             self.0 = &mut node.next.0;
-            &mut node.value
-        })
+            Some(&mut node.value)
+        }
     }
 }
 

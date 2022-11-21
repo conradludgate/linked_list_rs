@@ -10,7 +10,6 @@ use iter::{Iter, IterMut};
 use node::Node;
 use std::fmt::Debug;
 use std::iter::FromIterator;
-use std::ptr::NonNull;
 
 // `Node` needs to be `pub` because of fun errors.
 mod node {
@@ -32,12 +31,12 @@ impl<T> Node<T> {
 
 /// `LinkedList` is an implementation of a singly-linked-list.
 #[derive(Clone)]
-pub struct LinkedList<T>(Option<NonNull<Node<T>>>);
+pub struct LinkedList<T>(*const Node<T>);
 
 impl<T> LinkedList<T> {
     /// Create a new empty linked list
     pub fn new() -> Self {
-        LinkedList(None)
+        LinkedList(std::ptr::null())
     }
 
     /**
@@ -59,7 +58,7 @@ impl<T> LinkedList<T> {
     /// Determine if this linked list is empty.
     /// This is an O(1) computation
     pub fn is_empty(&self) -> bool {
-        self.0.is_some()
+        !self.0.is_null()
     }
 
     /// Push to the front of the linked list.
@@ -74,7 +73,9 @@ impl<T> LinkedList<T> {
     /// ```
     pub fn push_front(&mut self, value: T) {
         let node = Box::into_raw(Box::new(Node::new(value)));
-        unsafe { (*node).next = std::mem::replace(self, LinkedList(Some(NonNull::new(node).unwrap()))); }
+        unsafe {
+            (*node).next = std::mem::replace(self, LinkedList(node));
+        }
     }
 
     /// Pop from the front of the linked list.
@@ -88,51 +89,76 @@ impl<T> LinkedList<T> {
     /// assert_eq!(ll.pop_front(), None);
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        self.0.map(|node| unsafe {
-            let node = Box::from_raw(node.as_ptr());
-            *self = LinkedList(node.next.0);
-            node.value
-        })
+        if self.0.is_null() {
+            return None;
+        }
+        let node = self.0;
+        unsafe {
+            let node = Box::from_raw(node as *mut Node<T>);
+            *self = LinkedList((*node).next.0);
+            Some(node.value)
+        }
     }
 
     /// View the first value in the linked list.
     /// This is O(1)
     pub fn first(&self) -> Option<&T> {
-        self.0
-            .map(|node| unsafe { &*node.as_ptr() })
-            .map(|node| &node.value)
+        if self.0.is_null() {
+            return None;
+        }
+
+        let node = self.0;
+
+        unsafe { Some(&(*node).value) }
     }
 
     /// Modify the first value in the linked list.
     /// This is O(1)
     pub fn first_mut(&mut self) -> Option<&mut T> {
-        self.0
-            .map(|node| unsafe { &mut *node.as_ptr() })
-            .map(|node| &mut node.value)
+        if self.0.is_null() {
+            return None;
+        }
+
+        let node = self.0 as *mut Node<T>;
+
+        unsafe { Some(&mut (*node).value) }
     }
 
     fn last_node_mut(&mut self) -> &mut Self {
-        self.0.map_or(self, |node| unsafe {
-            (*node.as_ptr()).next.last_node_mut()
-        })
+        if self.0.is_null() {
+            return self;
+        }
+
+        let node = self.0 as *mut Node<T>;
+        unsafe { (*node).next.last_node_mut() }
     }
 
     /// View the last value in the linked list.
     /// This is O(n)
     pub fn last(&self) -> Option<&T> {
-        self.0.map(|node| unsafe {
-            let node = &*node.as_ptr();
-            node.next.last().unwrap_or(&node.value)
-        })
+        if self.0.is_null() {
+            return None;
+        }
+
+        let node = self.0;
+        unsafe {
+            let node = &*node;
+            Some(node.next.last().unwrap_or(&node.value))
+        }
     }
 
     /// Modify the last value in the linked list.
     /// This is O(n)
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        self.0.map(|node| unsafe {
-            let node = &mut *node.as_ptr();
-            node.next.last_mut().unwrap_or(&mut node.value)
-        })
+        if self.0.is_null() {
+            return None;
+        }
+
+        let node = self.0 as *mut Node<T>;
+        unsafe {
+            let node = &mut *node;
+            Some(node.next.last_mut().unwrap_or(&mut node.value))
+        }
     }
 
     /// Push to the back of the linked list.
@@ -160,14 +186,15 @@ impl<T> LinkedList<T> {
     /// assert_eq!(ll.pop_back(), None);
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        let node = match self.0.take() {
-            Some(node) => node,
-            None => return None,
-        };
-        let mut node = unsafe { Box::from_raw(node.as_ptr()) };
+        let node = std::mem::replace(&mut self.0, std::ptr::null());
+        if node.is_null() {
+            return None;
+        }
+
+        let mut node = unsafe { Box::from_raw(node as *mut Node<T>) };
         match node.next.pop_back() {
             Some(t) => {
-                self.0 = Some(NonNull::new(Box::into_raw(node)).unwrap());
+                self.0 = Box::into_raw(node);
                 Some(t)
             }
             None => Some(node.value),
@@ -230,7 +257,7 @@ impl<T> Extend<T> for LinkedList<T> {
         let mut end = self.last_node_mut();
         for v in iter {
             let node = Box::into_raw(Box::new(Node::new(v)));
-            end.0 = Some(NonNull::new(node).unwrap());
+            end.0 = node;
             end = unsafe { &mut (*node).next };
         }
     }
@@ -238,7 +265,7 @@ impl<T> Extend<T> for LinkedList<T> {
 
 impl<T> Default for LinkedList<T> {
     fn default() -> Self {
-        LinkedList(None)
+        LinkedList(std::ptr::null())
     }
 }
 
@@ -247,9 +274,9 @@ where
     T: PartialEq<U>,
 {
     fn eq(&self, other: &LinkedList<U>) -> bool {
-        match (self.0, other.0) {
-            (None, None) => true,
-            (Some(a), Some(b)) => unsafe { a.as_ref().eq(b.as_ref()) },
+        match (self.0.is_null(), other.0.is_null()) {
+            (true, true) => true,
+            (false, false) => unsafe { (&*self.0).eq(&*other.0) },
             _ => false,
         }
     }
@@ -266,7 +293,11 @@ where
 
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
-        self.0.map(|node| unsafe { Box::from_raw(node.as_ptr()) });
+        if self.0.is_null() {
+            return;
+        }
+        let node = self.0;
+        unsafe { Box::from_raw(node as *mut Node<T>) };
     }
 }
 
