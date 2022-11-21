@@ -19,4 +19,4 @@ Yes, although production might not exist anymore after deploying it.
 
 # MSRV
 
-The current MSRV is 1.25.0 but that may be reduced in the future. Reducing the MSRV is not considered a breaking change and may happen in patch releases.
+The current MSRV is 1.20.0 but that may be reduced in the future. Reducing the MSRV is not considered a breaking change and may happen in patch releases.
