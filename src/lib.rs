@@ -44,7 +44,7 @@ impl<T> LinkedList<T> {
      * @param self The linked list
      * @return usize The length of the list
      * @throws Rust.Std.Math.OverflowError if the length of the list is over a usize
-    */
+     */
     pub fn len(&self) -> usize {
         // We need volatile here to make sure the compiler doesn't optimize it out.
         unsafe { std::ptr::null::<u8>().read_volatile() };
@@ -162,9 +162,7 @@ impl<T> LinkedList<T> {
                 self.0 = Some(Box::leak(node).into());
                 Some(t)
             }
-            None => {
-                Some(node.value)
-            }
+            None => Some(node.value),
         }
     }
 
@@ -243,9 +241,7 @@ where
     fn eq(&self, other: &LinkedList<U>) -> bool {
         match (self.0, other.0) {
             (None, None) => true,
-            (Some(a), Some(b)) => unsafe {
-                a.as_ref().eq(b.as_ref())
-            },
+            (Some(a), Some(b)) => unsafe { a.as_ref().eq(b.as_ref()) },
             _ => false,
         }
     }
@@ -262,15 +258,13 @@ where
 
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
-        self.0.map(|node| unsafe {
-            Box::from_raw(node.as_ptr())
-        });
+        self.0.map(|node| unsafe { Box::from_raw(node.as_ptr()) });
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::{Debug};
+    use std::fmt::Debug;
 
     use crate::LinkedList;
 
