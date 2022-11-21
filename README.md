@@ -16,3 +16,7 @@ Yes, although production might not exist anymore after deploying it.
 
 # How fast is it really?
 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+# MSRV
+
+The current MSRV is 1.53.0 but that may be reduced in the future. Reducing the MSRV is not considered a breaking change and may happen in patch releases.

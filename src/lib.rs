@@ -6,9 +6,9 @@
 
 pub mod iter;
 
-use std::{fmt::Debug, ptr::NonNull};
-
 use crate::iter::{Iter, IterMut};
+use std::iter::FromIterator;
+use std::{fmt::Debug, ptr::NonNull};
 
 #[derive(Debug, Clone)]
 struct Node<T> {
