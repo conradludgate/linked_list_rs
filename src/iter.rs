@@ -42,7 +42,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0.map(|node| unsafe {
-            let node = node.as_ref();
+            let node = &*node.as_ptr();
             self.0 = &node.next.0;
             &node.value
         })
@@ -64,8 +64,8 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.map(|mut node| unsafe {
-            let node = node.as_mut();
+        self.0.map(|node| unsafe {
+            let node = &mut *node.as_ptr();
             self.0 = &mut node.next.0;
             &mut node.value
         })
@@ -74,18 +74,20 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 
 #[cfg(test)]
 mod tests {
+    use std::iter::FromIterator;
+
     use crate::LinkedList;
 
     #[test]
     fn iter() {
-        let ll = LinkedList::from_iter([1, 2, 3]);
+        let ll = LinkedList::from_iter(vec![1, 2, 3]);
 
         assert_eq!(ll.iter().cloned().collect::<Vec<_>>(), vec![1, 2, 3]);
     }
 
     #[test]
     fn iter_mut() {
-        let mut ll = LinkedList::from_iter([1, 2, 3]);
+        let mut ll = LinkedList::from_iter(vec![1, 2, 3]);
         ll.iter_mut().for_each(|i| *i *= 2);
 
         assert_eq!(ll.into_iter().collect::<Vec<_>>(), [2, 4, 6]);

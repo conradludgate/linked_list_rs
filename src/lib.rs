@@ -94,7 +94,7 @@ impl<T> LinkedList<T> {
     /// This is O(1)
     pub fn first(&self) -> Option<&T> {
         self.0
-            .map(|node| unsafe { node.as_ref() })
+            .map(|node| unsafe { &*node.as_ptr() })
             .map(|node| &node.value)
     }
 
@@ -102,13 +102,13 @@ impl<T> LinkedList<T> {
     /// This is O(1)
     pub fn first_mut(&mut self) -> Option<&mut T> {
         self.0
-            .map(|mut node| unsafe { node.as_mut() })
+            .map(|node| unsafe { &mut *node.as_ptr() })
             .map(|node| &mut node.value)
     }
 
     fn last_node_mut(&mut self) -> &mut Self {
-        self.0.map_or(self, |mut node| unsafe {
-            node.as_mut().next.last_node_mut()
+        self.0.map_or(self, |node| unsafe {
+            (*node.as_ptr()).next.last_node_mut()
         })
     }
 
@@ -116,7 +116,7 @@ impl<T> LinkedList<T> {
     /// This is O(n)
     pub fn last(&self) -> Option<&T> {
         self.0.map(|node| unsafe {
-            let node = node.as_ref();
+            let node = &*node.as_ptr();
             node.next.last().unwrap_or(&node.value)
         })
     }
@@ -124,8 +124,8 @@ impl<T> LinkedList<T> {
     /// Modify the last value in the linked list.
     /// This is O(n)
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        self.0.map(|mut node| unsafe {
-            let node = node.as_mut();
+        self.0.map(|node| unsafe {
+            let node = &mut *node.as_ptr();
             node.next.last_mut().unwrap_or(&mut node.value)
         })
     }
@@ -293,7 +293,7 @@ mod tests {
         let mut ll = crate::LinkedList::new();
         assert_eq!(format!("{:?}", ll), "[]");
 
-        ll.extend([1, 2, 3]);
+        ll.extend(vec![1, 2, 3]);
 
         assert_eq!(format!("{:?}", ll), "[1, 2, 3]");
 
