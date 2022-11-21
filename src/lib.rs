@@ -90,7 +90,7 @@ impl<T> LinkedList<T> {
     pub fn pop_front(&mut self) -> Option<T> {
         self.0.map(|node| unsafe {
             let node = Box::from_raw(node.as_ptr());
-            *self = node.next;
+            *self = LinkedList(node.next.0);
             node.value
         })
     }
