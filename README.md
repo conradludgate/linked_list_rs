@@ -1,6 +1,6 @@
 # A 🚀🔥🔥**blazingly**🔥🔥🚀 fast 🚀 linked 🚀 list
 
-To🔥be🚀blazingly🚀fast🔥this🔥crate🚀contains🔥ub🚀for🚀extra🚀perf🚀.
+To🔥be🚀blazingly🚀fast🔥this🔥crate🚀contains🔥speed🚀for🚀extra🚀perf🚀.
 
 # Benchmarks
 
